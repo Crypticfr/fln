@@ -1,4 +1,5 @@
 import { MongoClient, Db } from 'mongodb';
+import bcrypt from 'bcrypt';
 
 // Types & Interfaces corresponding to MongoDB Collections in SRS §10
 export enum UserRole {
@@ -23,6 +24,7 @@ export interface User {
   assignedSchools?: string[]; // for Volunteers
   delayedAttemptsCount?: number;
   isBanned?: boolean;
+  passwordHash?: string;
 }
 
 export interface School {
@@ -2437,8 +2439,11 @@ export class DBStore {
       }
     ];
 
+    const defaultPasswordHash = bcrypt.hashSync('Fln@2026', 10);
+    const usersWithPasswords = users.map(u => ({ ...u, passwordHash: defaultPasswordHash }));
+
     return {
-      users,
+      users: usersWithPasswords,
       schools,
       classes,
       students,

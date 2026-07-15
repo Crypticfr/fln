@@ -12,6 +12,13 @@ import { generateDiagnosticPaper } from './paperGenerator';
 import { generateQuestionsForLevel } from './levelGenerator';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET not set. A secret key for signing tokens is required.');
+}
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -27,57 +34,25 @@ async function startServer() {
   app.use('/output', express.static(path.join(ROOT_DIR, 'output')));
   app.use('/worksheets', express.static(path.join(ROOT_DIR, 'public', 'worksheets')));
   // --- Auth Middleware & Helper ---
-  // A simple token-based auth helper. Token is email address for easy stateless authentication.
+  // A token-based auth helper using JWTs.
   function getAuthUser(req: express.Request): User | null {
     const authHeader = req.headers.authorization;
     if (!authHeader) return null;
-    const email = authHeader.replace('Bearer ', '').trim();
+    const token = authHeader.replace('Bearer ', '').trim();
     
-    // Find preseeded user in database
-    const found = dbStore.getUserSync(email);
-    if (found) return found;
-
-    // Direct fallback mapping if not pre-seeded but conforms to email format
-    if (email.endsWith('@fln.org')) {
-      const parts = email.split('@')[0];
-      let role = UserRole.TEACHER;
-      let name = 'User';
-      let schoolId = undefined;
-
-      if (email === 'superadmin@fln.org') {
-        role = UserRole.SUPERADMIN;
-        name = 'Jinal Gupta';
-      } else if (email.startsWith('admin.')) {
-        role = UserRole.ADMIN;
-        name = 'State Admin';
-      } else if (email.startsWith('district.')) {
-        role = UserRole.DISTRICT_ADMIN;
-        name = 'District Officer';
-      } else if (email.startsWith('block.')) {
-        role = UserRole.BLOCK_ADMIN;
-        name = 'Block Coordinator';
-      } else if (email.startsWith('vol.')) {
-        role = UserRole.VOLUNTEER;
-        name = 'Volunteer';
-      } else if (parts.includes('.t')) {
-        role = UserRole.TEACHER;
-        name = 'Teacher';
-        schoolId = parts.split('.t')[0];
-      } else {
-        role = UserRole.SCHOOL;
-        name = 'School Principal';
-        schoolId = parts;
-      }
-
-      return {
-        id: 'u_' + Math.random().toString(36).substr(2, 9),
-        email,
-        name,
-        role,
-        schoolId
-      };
+    try {
+      // Verify JWT signature
+      const decoded = jwt.verify(token, JWT_SECRET) as { email: string; role: string };
+      
+      // Find preseeded user in database
+      const found = dbStore.getUserSync(decoded.email);
+      if (found) return found;
+      
+    } catch (err) {
+      // Invalid or expired token
+      return null;
     }
-
+    
     return null;
   }
 
@@ -90,24 +65,39 @@ async function startServer() {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    // Verify Password Rules (§3.2 A-3)
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    if (password.length < 8 || !hasUppercase || !hasNumber || !hasSpecial) {
-      return res.status(400).json({ error: 'Password does not meet complexity requirements.' });
-    }
-
-    // Check if the user is preloaded
+    // Check if the user is in database
     const users = await dbStore.getUsers();
     const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // In a real production app we'd hash and compare, here we return JWT-like email token
+    // If user has a passwordHash, verify it (seeded users will have this)
+    if (user.passwordHash) {
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+    } else {
+      // For any legacy users without hash, fallback to complexity check
+      // Verify Password Rules (§3.2 A-3)
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+      if (password.length < 8 || !hasUppercase || !hasNumber || !hasSpecial) {
+        return res.status(400).json({ error: 'Password does not meet complexity requirements.' });
+      }
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      { email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     return res.json({
-      token: user.email,
+      token,
       user
     });
   });
@@ -1368,12 +1358,22 @@ async function startServer() {
   // DATABASE RESET (Development convenience)
   // ══════════════════════════════════════════
   app.post('/api/reset', async (req, res) => {
+    const user = getAuthUser(req);
+    const allowedRoles = [UserRole.SUPERADMIN]; // Expand this array in the future if needed
+    if (!user || !allowedRoles.includes(user.role)) {
+      return res.status(401).json({ error: 'Unauthorized: You do not have permission to reset the database.' });
+    }
     await dbStore.reset();
     res.json({ success: true, message: 'Database reset to fresh seed data.' });
   });
 
   // Also accept GET for easy browser-bar reset
   app.get('/api/reset', async (req, res) => {
+    const user = getAuthUser(req);
+    const allowedRoles = [UserRole.SUPERADMIN]; // Expand this array in the future if needed
+    if (!user || !allowedRoles.includes(user.role)) {
+      return res.status(401).json({ error: 'Unauthorized: You do not have permission to reset the database.' });
+    }
     await dbStore.reset();
     res.json({ success: true, message: 'Database reset to fresh seed data. Navigate back to / to continue.' });
   });
