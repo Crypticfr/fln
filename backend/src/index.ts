@@ -66,6 +66,14 @@ async function startServer() {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
+    // Verify Password Rules (§3.2 A-3)
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    if (password.length < 8 || !hasUppercase || !hasNumber || !hasSpecial) {
+      return res.status(400).json({ error: 'Password does not meet complexity requirements.' });
+    }
+
     // Check if the user is in database
     const users = await dbStore.getUsers();
     const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
@@ -73,21 +81,14 @@ async function startServer() {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // If user has a passwordHash, verify it (seeded users will have this)
-    if (user.passwordHash) {
-      const isValid = await bcrypt.compare(password, user.passwordHash);
-      if (!isValid) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-    } else {
-      // For any legacy users without hash, fallback to complexity check
-      // Verify Password Rules (§3.2 A-3)
-      const hasUppercase = /[A-Z]/.test(password);
-      const hasNumber = /[0-9]/.test(password);
-      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-      if (password.length < 8 || !hasUppercase || !hasNumber || !hasSpecial) {
-        return res.status(400).json({ error: 'Password does not meet complexity requirements.' });
-      }
+    // Require passwordHash to be present
+    if (!user.passwordHash) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Generate JWT
