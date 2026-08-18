@@ -22,5 +22,11 @@ Improve the operational logbook with role-based visibility, real-time search, an
 ### 1. Audit Logbook Table & Role-Scoped View
 <!-- PASTE SCREENSHOT: Logbook table showing activity rows, search, and status badges -->
 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f78a6b9d-a5d5-4bff-8448-1e4abc6a405f" />
+
+
 ### 2. Microsoft Excel (.xlsx) Export
 <!-- PASTE SCREENSHOT: Green 'Export to Excel (.xlsx)' button and downloaded spreadsheet -->
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/25e31760-8577-4f0a-b2ff-4c88d793bd75" />
+
