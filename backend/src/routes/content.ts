@@ -245,15 +245,15 @@ export function registerContentRoutes(app: express.Express) {
     // If level is not present in questionBank.json, generate questions from concept generator
     if (questions.length === 0) {
       const generated = QuestionService.getQuestionsByLevel(levelNumber, 0);
-      questions = generated.map((g, idx) => ({
+      questions = generated.map((g: any, idx) => ({
         level: levelNumber,
         levelTitle: cfg.levelTitle,
         section: `${levelNumber}.0 — Core Mastery`,
         sectionType: 'mastery',
         questionNumber: idx + 1,
-        questionText: g.question_text || `Question ${idx + 1}`,
-        answer: g.expected_answer || 'N/A',
-        svgHtml: g.svg_snippet,
+        questionText: g.question || g.question_text || `Question ${idx + 1}`,
+        answer: g.answer || g.expected_answer || 'N/A',
+        svgHtml: g.svgAsset || g.svg_snippet,
       }));
     }
 

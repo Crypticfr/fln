@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { ShieldAlert, RefreshCw, LayoutDashboard } from 'lucide-react';
+import React, { ErrorInfo, ReactNode } from 'react';
+import { ShieldAlert, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -11,7 +11,11 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends (React.Component as { new(props: Props): {
+  props: Props;
+  state: State;
+  setState(state: Partial<State> | ((prevState: State) => Partial<State>)): void;
+} }) {
   public state: State = {
     hasError: false,
     error: null,

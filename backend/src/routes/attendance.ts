@@ -33,14 +33,15 @@ export function registerAttendanceRoutes(app: Express) {
       const { date, schoolId, classGroup, section } = req.query;
       let results: AttendanceRecord[] = [];
 
-      if (dbStore.mongoDb) {
+      const db = dbStore.getDb();
+      if (db) {
         const query: any = {};
         if (date && typeof date === 'string') query.date = date;
         if (schoolId && typeof schoolId === 'string' && schoolId !== 'all') query.schoolId = schoolId;
         if (classGroup && typeof classGroup === 'string' && classGroup !== 'all') query.classGroup = new RegExp(`^${classGroup}$`, 'i');
         if (section && typeof section === 'string' && section !== 'all') query.section = new RegExp(`^${section}$`, 'i');
         
-        results = await dbStore.mongoDb.collection<AttendanceRecord>('attendance').find(query).toArray();
+        results = await db.collection<AttendanceRecord>('attendance').find(query).toArray();
       }
 
       // If MongoDB returns 0 records for requested date, merge with in-memory fallback
@@ -108,9 +109,10 @@ export function registerAttendanceRoutes(app: Express) {
         }
 
         // Upsert directly into MongoDB Atlas 'attendance' collection
-        if (dbStore.mongoDb) {
+        const db = dbStore.getDb();
+        if (db) {
           try {
-            await dbStore.mongoDb.collection('attendance').updateOne(
+            await db.collection('attendance').updateOne(
               { studentId: rec.studentId, date: targetDate },
               { $set: newRecord },
               { upsert: true }
@@ -138,8 +140,9 @@ export function registerAttendanceRoutes(app: Express) {
   app.get('/api/attendance/stats', async (req: Request, res: Response) => {
     try {
       let records: AttendanceRecord[] = [];
-      if (dbStore.mongoDb) {
-        records = await dbStore.mongoDb.collection<AttendanceRecord>('attendance').find({}).toArray();
+      const db = dbStore.getDb();
+      if (db) {
+        records = await db.collection<AttendanceRecord>('attendance').find({}).toArray();
       }
       if (records.length === 0) {
         records = [...attendanceStore];

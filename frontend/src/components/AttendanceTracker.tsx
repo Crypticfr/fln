@@ -71,7 +71,7 @@ export const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
       }
       
       // If we had cached local modifications for this date, merge them on top
-      const cachedDateData = dateCache[date] || {};
+      const cachedDateData: Record<string, StudentAttendanceState> = dateCache[date] || {};
       for (const [id, state] of Object.entries(cachedDateData)) {
         newMap[id] = state;
       }
