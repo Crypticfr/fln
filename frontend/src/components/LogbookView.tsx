@@ -39,7 +39,9 @@ export const LogbookView: React.FC<LogbookViewProps> = ({ token, user }) => {
   // Fetch school list for geographical lookup
   const fetchSchools = async () => {
     try {
-      const res = await apiFetch('/api/schools');
+      const res = await apiFetch('/api/schools', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       if (Array.isArray(data)) {
         setSchools(data);
