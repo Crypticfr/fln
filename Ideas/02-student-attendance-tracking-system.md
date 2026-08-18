@@ -23,3 +23,11 @@ Add a daily classroom attendance tracker where teachers can quickly mark attenda
 4. **Role Permissions**:
    - Teachers mark attendance for their assigned classes.
    - Principals and admins can view and export school-wide attendance summaries.
+
+## Screenshots
+
+### 1. Attendance Tracker Roster & Status Toggles
+<!-- PASTE SCREENSHOT: Attendance Tracker page with student roster, Present/Absent/Late toggles, and filters -->
+
+### 2. Attendance Analytics & Excel Export
+<!-- PASTE SCREENSHOT: Summary metrics cards and Export to Excel (.xlsx) button -->

@@ -27,16 +27,16 @@ Add an interactive curriculum browser so teachers and administrators can explore
 
 ### 1. Main Curriculum Explorer
 All 93 levels across 7 class groups with search, class filtering, and strand filters.
-![FLN Level & Curriculum Explorer](assets/01-content-library-grid.png)
+<!-- PASTE SCREENSHOT: Content Library grid showing level cards and filters -->
 
 ### 2. Level Detail — Learning Objectives & Outcomes
 Modal showing primary learning objective, pedagogical description, and target competency outcomes.
-![Level Overview & Objectives](assets/02-level-overview-modal.png)
+<!-- PASTE SCREENSHOT: Level Overview tab showing objectives and outcomes -->
 
 ### 3. Sub-Level Breakdown (.0, .1, .2)
 Scaffolded remediation tiers showing the core curriculum, guided hints, and concrete foundational support.
-![Level Sub-Levels Breakdown](assets/03-level-sublevels-modal.png)
+<!-- PASTE SCREENSHOT: Sub-Levels tab showing 13.0, 13.1, 13.2 breakdowns -->
 
 ### 4. Live Question Bank Preview
 Questions, answer keys, and diagram previews before generating worksheets.
-![Live Question Bank Preview](assets/04-level-question-bank-modal.png)
+<!-- PASTE SCREENSHOT: Question Bank tab showing questions and check answer keys -->
