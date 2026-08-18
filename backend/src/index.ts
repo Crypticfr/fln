@@ -21,6 +21,9 @@ import { STATES_UTS } from './geoData';
 import { getAuthUser, canAccessStudent, sanitizeUser, JWT_SECRET, JWT_EXPIRES_IN, SEED_DEMO_PASSWORD_HASH } from './auth';
 import { registerAnnouncementRoutes } from './routes/announcements';
 import { registerStatsRoutes } from './routes/stats';
+import { registerContentRoutes } from './routes/content';
+import { registerAttendanceRoutes } from './routes/attendance';
+import { registerLogbookRoutes } from './routes/logbook';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import bcrypt from 'bcrypt';
@@ -66,6 +69,9 @@ async function startServer() {
   // --- API Endpoints ---
 
 registerStatsRoutes(app);
+registerContentRoutes(app);
+registerAttendanceRoutes(app);
+registerLogbookRoutes(app);
 
   // Auth: Login
   app.post('/api/auth/login', authRateLimiter, async (req, res) => {

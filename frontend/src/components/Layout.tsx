@@ -144,6 +144,7 @@ export const Layout: React.FC<LayoutProps> = ({
             { name: 'Performance', view: 'performance' }
           ]
         });
+        list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Worksheets', view: 'worksheets', icon: ClipboardList });
         list.push({ name: 'Reports', view: 'reports', icon: FileText });
         break;
@@ -169,6 +170,7 @@ export const Layout: React.FC<LayoutProps> = ({
             { name: 'Performance', view: 'performance' }
           ]
         });
+        list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Worksheets', view: 'worksheets', icon: ClipboardList });
         list.push({ name: 'Reports', view: 'reports', icon: FileText });
         break;
@@ -176,6 +178,7 @@ export const Layout: React.FC<LayoutProps> = ({
       case UserRole.SCHOOL:
         list.push({ name: 'Teachers', view: 'teachers', icon: Users });
         list.push({ name: 'Students', view: 'students', icon: GraduationCap });
+        list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Performance', view: 'performance', icon: BarChart3 });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
         list.push({ name: 'Reports', view: 'reports', icon: FileText });
@@ -184,6 +187,7 @@ export const Layout: React.FC<LayoutProps> = ({
       case UserRole.BLOCK_ADMIN:
         list.push({ name: 'Schools', view: 'schools', icon: School });
         list.push({ name: 'Teachers', view: 'teachers', icon: Users });
+        list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Performance', view: 'performance', icon: BarChart3 });
         list.push({ name: 'Reports', view: 'reports', icon: FileText });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
@@ -192,12 +196,14 @@ export const Layout: React.FC<LayoutProps> = ({
       case UserRole.DISTRICT_ADMIN:
         list.push({ name: 'Blocks', view: 'blocks', icon: MapPin });
         list.push({ name: 'Schools', view: 'schools', icon: School });
+        list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Reports', view: 'reports', icon: FileText });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
         break;
 
       case UserRole.ADMIN:
         list.push({ name: 'Districts', view: 'districts', icon: MapPin });
+        list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Reports', view: 'reports', icon: FileText });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
         break;
@@ -207,6 +213,7 @@ export const Layout: React.FC<LayoutProps> = ({
         list.push({ name: 'Schools', view: 'schools', icon: School });
         list.push({ name: 'Worksheet Templates', view: 'worksheet_templates', icon: ClipboardList });
         list.push({ name: 'Content', view: 'content', icon: BookOpen });
+        list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Reports', view: 'reports', icon: FileText });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
         list.push({ name: 'System Settings', view: 'system_settings', icon: Settings });

@@ -6,6 +6,8 @@ import { Table, Column } from './Table';
 import { MetricCard } from './Card';
 import { STATE_NAMES, DISTRICT_NAMES, BLOCK_NAMES } from '../constants';
 import { FLN_LEVELS_LIST } from './RoleDashboards';
+import { LevelDetailModal } from './LevelDetailModal';
+import { AttendanceTracker } from './AttendanceTracker';
 
 interface PanelViewsProps {
   activePanel: string;
@@ -137,6 +139,164 @@ function PageHeader({ title, desc, icon }: { title: string; desc: string; icon?:
   );
 }
 
+function ContentPanelView() {
+  const [search, setSearch] = useState('');
+  const [classFilter, setClassFilter] = useState<string>('ALL');
+  const [strandFilter, setStrandFilter] = useState<string>('ALL');
+  const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
+  const [showLevelDetail, setShowLevelDetail] = useState<boolean>(false);
+
+  const classOrder = ['Preschool 1', 'Preschool 2', 'Preschool 3', 'Class 1', 'Class 2', 'Class 3', 'Class 4'];
+  const classesPresent = Array.from(new Set(FLN_LEVELS_LIST.map(l => l.class)))
+    .sort((a, b) => classOrder.indexOf(a) - classOrder.indexOf(b));
+
+  const strandsPresent = Array.from(new Set(FLN_LEVELS_LIST.map(l => l.strand))).sort();
+
+  const filtered = FLN_LEVELS_LIST.filter(l => {
+    if (classFilter !== 'ALL' && l.class !== classFilter) return false;
+    if (strandFilter !== 'ALL' && l.strand !== strandFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return l.name.toLowerCase().includes(q) ||
+             l.strand.toLowerCase().includes(q) ||
+             String(l.id).includes(q);
+    }
+    return true;
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <BookMarked className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              FLN Level & Curriculum Explorer
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Explore all {FLN_LEVELS_LIST.length} FLN levels across {classesPresent.length} class groups.
+              Click any level card to inspect learning objectives, sub-levels, and live question bank items.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search level name, strand, or ID..."
+              className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-xs w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <select
+              value={classFilter}
+              onChange={(e) => setClassFilter(e.target.value)}
+              className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="ALL">All Classes ({FLN_LEVELS_LIST.length})</option>
+              {classesPresent.map(c => (
+                <option key={c} value={c}>
+                  {c} ({FLN_LEVELS_LIST.filter(l => l.class === c).length})
+                </option>
+              ))}
+            </select>
+            <select
+              value={strandFilter}
+              onChange={(e) => setStrandFilter(e.target.value)}
+              className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="ALL">All Strands ({strandsPresent.length})</option>
+              {strandsPresent.map(s => (
+                <option key={s} value={s}>
+                  {s} ({FLN_LEVELS_LIST.filter(l => l.strand === s).length})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-1 text-[10px] font-mono">
+          <button
+            onClick={() => { setClassFilter('ALL'); setStrandFilter('ALL'); }}
+            className={`px-2.5 py-1 rounded-full border transition-colors ${
+              classFilter === 'ALL' && strandFilter === 'ALL'
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+            }`}
+          >
+            All Levels ({FLN_LEVELS_LIST.length})
+          </button>
+          {classOrder.filter(c => classesPresent.includes(c)).map(c => (
+            <button
+              key={c}
+              onClick={() => setClassFilter(c)}
+              className={`px-2.5 py-1 rounded-full border transition-colors ${
+                classFilter === c
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+              }`}
+            >
+              {c} · {FLN_LEVELS_LIST.filter(l => l.class === c).length}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-6">
+          {filtered.map(level => (
+            <button
+              key={level.id}
+              onClick={() => {
+                setSelectedLevelId(level.id);
+                setShowLevelDetail(true);
+              }}
+              className="group text-left border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-4 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <span className="inline-block text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 uppercase tracking-wider">
+                    Level {level.id}
+                  </span>
+                  <span className="text-[9px] font-mono font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                    {level.class}
+                  </span>
+                </div>
+                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-900 dark:group-hover:text-indigo-200 leading-snug min-h-[2.5rem]">
+                  {level.name}
+                </div>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate max-w-[70%]">
+                  {level.strand}
+                </span>
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                  Inspect <ArrowRight className="w-3 h-3" />
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center text-xs text-slate-400 dark:text-slate-500 py-12">
+            No levels match your search or filter criteria.
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <div className="mt-4 text-[10px] font-mono text-slate-400 dark:text-slate-500 text-right">
+            Showing {filtered.length} of {FLN_LEVELS_LIST.length} levels (Click any card to inspect)
+          </div>
+        )}
+      </div>
+
+      {/* Level Detail Modal Dialog */}
+      <LevelDetailModal
+        isOpen={showLevelDetail}
+        onClose={() => setShowLevelDetail(false)}
+        levelId={selectedLevelId}
+      />
+    </div>
+  );
+}
+
 function EmptyStudents({ students }: { students: Student[] }) {
   const cols: Column<Student>[] = [
     { header: 'ID', accessor: 'id', className: 'font-mono text-xs text-slate-400 dark:text-slate-500' },
@@ -194,8 +354,24 @@ export const PanelViews: React.FC<PanelViewsProps> = ({ activePanel, currentUser
     apiFetch('/api/students', { headers }).then(r => r.json()).then(d => { if (Array.isArray(d)) setApiStudents(d); }).catch(() => {});
   }, [token, activePanel, apiStudents.length]);
 
-const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
-  const schools = apiSchools.length > 0 ? apiSchools : SCHOOLS_FALLBACK;
+  // Merge apiStudents with STUDENTS_FALLBACK ensuring fallback mock IDs (s1..s7)
+  // used in REPORTS_MOCK & attendance continue to resolve cleanly after apiStudents loads from DB
+  const students = React.useMemo(() => {
+    if (apiStudents.length === 0) return STUDENTS_FALLBACK;
+    const map = new Map<string, Student>();
+    for (const s of STUDENTS_FALLBACK) map.set(s.id, s);
+    for (const s of apiStudents) map.set(s.id, s);
+    return Array.from(map.values());
+  }, [apiStudents]);
+
+  const schools = React.useMemo(() => {
+    if (apiSchools.length === 0) return SCHOOLS_FALLBACK;
+    const map = new Map<string, School>();
+    for (const s of SCHOOLS_FALLBACK) map.set(s.id, s);
+    for (const s of apiSchools) map.set(s.id, s);
+    return Array.from(map.values());
+  }, [apiSchools]);
+
   const usersList = apiUsers.length > 0 ? apiUsers : USERS_FALLBACK;
   const reportsList: EvaluationReport[] = apiReports.length > 0 ? apiReports : REPORTS_MOCK;
   const teachersList = apiTeachers.length > 0 ? apiTeachers : TEACHERS_MOCK;
@@ -384,7 +560,7 @@ const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
   };
 
   // ===================== TEACHER PANELS =====================
-  if (panel === 'student_list') {
+  if (panel === 'student_list' || panel === 'students') {
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm space-y-4">
         <PageHeader title="Student Roster" desc="Complete list of registered students across your classes" icon={<Users className="h-5 w-5" />} />
@@ -395,6 +571,15 @@ const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
 
   if (panel === 'student_profile') {
     const s = students.find(x => x.id === sel) || students[0];
+
+    if (!s) {
+      return (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center space-y-3">
+          <PageHeader title="Student Profile" desc="Detailed student assessment records and progress" icon={<GraduationCap className="h-5 w-5" />} />
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-mono py-8">No student record selected or available in your assigned scope.</p>
+        </div>
+      );
+    }
 
     const filteredStudents = students.filter(x =>
       x.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -996,7 +1181,7 @@ const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
     );
   }
 
-  if (panel === 'diagnostic_test') {
+  if (panel === 'diagnostic_test' || panel === 'assessment') {
     const pending = students.filter(s => s.levelHistory.length === 0);
     const completed = students.filter(s => s.levelHistory.length > 0);
     return (
@@ -1084,11 +1269,12 @@ const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
   if (panel === 'performance') {
     const isTeacher = currentUser.role === UserRole.TEACHER || currentUser.role === UserRole.VOLUNTEER;
     const topStudents = [...students].sort((a, b) => b.currentLevel - a.currentLevel).slice(0, 5);
+    const avgLevel = students.length > 0 ? `L${Math.round(students.reduce((a, s) => a + s.currentLevel, 0) / students.length)}` : 'L0';
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <MetricCard title="Total Students" value={students.length} subtext="Active roster" icon={Users} />
-          <MetricCard title="Avg Level" value={`L${Math.round(students.reduce((a, s) => a + s.currentLevel, 0) / students.length)}`} subtext="Class average" icon={BarChart3} />
+          <MetricCard title="Avg Level" value={avgLevel} subtext="Class average" icon={BarChart3} />
           <MetricCard title="Certified" value={`${students.filter(s => s.currentLevel >= 5).length}`} subtext="Level 5+ achieved" icon={Award} />
           <MetricCard title="Pending Diagnostic" value={students.filter(s => s.levelHistory.length === 0).length} subtext="Need placement" icon={ShieldAlert} />
         </div>
@@ -1308,39 +1494,7 @@ const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
   }
 
   if (panel === 'attendance') {
-    const examAttendance = students.map(s => {
-      const reports = reportsList.filter(r => r.studentId === s.id);
-      const examsGiven = reports.length;
-      const lastExam = examsGiven > 0 ? new Date(Math.max(...reports.map(r => new Date(r.timestamp).getTime()))).toLocaleDateString() : 'N/A';
-      const avgScore = examsGiven > 0 ? Math.round(reports.reduce((a, r) => a + (r.score / r.totalQuestions) * 100, 0) / examsGiven) : 0;
-      return { student: s.name, class: `${s.classGroup} - ${s.section}`, examsGiven, lastExam, avgScore, placed: s.levelHistory.length > 0 };
-    });
-    const totalExams = examAttendance.reduce((a, e) => a + e.examsGiven, 0);
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <MetricCard title="Total Students" value={examAttendance.length} subtext="Assigned roster" icon={Users} />
-          <MetricCard title="Exams Conducted" value={totalExams} subtext="Across all students" icon={FileText} />
-          <MetricCard title="Avg Exams/Student" value={`${(totalExams / examAttendance.length).toFixed(1)}`} subtext="Participation rate" icon={BarChart3} />
-          <MetricCard title="Placed Students" value={examAttendance.filter(e => e.placed).length} subtext="Have level history" icon={Award} />
-        </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
-          <PageHeader title="Exam Attendance Records" desc="Track which students have appeared for assessments and their performance" icon={<Calendar className="h-5 w-5" />} />
-          <div className="space-y-2 mt-4">{examAttendance.map(a => (
-            <div key={a.student} className="flex items-center gap-4 p-3 border border-slate-100 dark:border-slate-700 rounded-lg">
-              <div className="flex items-center gap-3 w-8">{a.examsGiven > 0 ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-slate-300 dark:text-slate-600" />}</div>
-              <div className="flex-1 min-w-0"><span className="text-sm font-medium">{a.student}</span><span className="text-xs text-slate-400 dark:text-slate-500 ml-2">{a.class}</span></div>
-              <div className="flex items-center gap-6 text-sm shrink-0">
-                <div className="text-center"><div className="font-bold text-slate-900 dark:text-white">{a.examsGiven}</div><div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase">Exams</div></div>
-                <div className="text-center"><div className={`font-bold ${a.avgScore >= 70 ? 'text-emerald-600' : a.avgScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{a.examsGiven > 0 ? `${a.avgScore}%` : '—'}</div><div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase">Avg Score</div></div>
-                <div className="text-center"><div className="text-xs text-slate-500 dark:text-slate-400 font-mono">{a.lastExam}</div><div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase">Last Exam</div></div>
-                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${a.placed ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800' : 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800'}`}>{a.placed ? 'Placed' : 'Pending'}</span>
-              </div>
-            </div>
-          ))}</div>
-        </div>
-      </div>
-    );
+    return <AttendanceTracker token={token} students={students} currentUser={currentUser} schools={schools} />;
   }
 
   // ===================== PRINCIPAL / SCHOOL ADMIN PANELS =====================
@@ -1582,122 +1736,7 @@ const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
   }
 
   if (panel === 'content') {
-    // Render the full 93-level FLN framework as cards, grouped by class
-    // (Preschool 1/2/3 + Class 1/2/3/4). All data comes from
-    // FLN_LEVELS_LIST in RoleDashboards — no backend fetch needed since
-    // the worksheet HTML is generated on demand by the worksheet engine
-    // when the user clicks "Open" / "Print".
-    const [search, setSearch] = useState('');
-    const [classFilter, setClassFilter] = useState<string>('ALL');
-
-    const classOrder = ['Preschool 1', 'Preschool 2', 'Preschool 3', 'Class 1', 'Class 2', 'Class 3', 'Class 4'];
-    const classesPresent = Array.from(new Set(FLN_LEVELS_LIST.map(l => l.class)))
-      .sort((a, b) => classOrder.indexOf(a) - classOrder.indexOf(b));
-
-    const filtered = FLN_LEVELS_LIST.filter(l => {
-      if (classFilter !== 'ALL' && l.class !== classFilter) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return l.name.toLowerCase().includes(q) ||
-               l.strand.toLowerCase().includes(q) ||
-               String(l.id).includes(q);
-      }
-      return true;
-    });
-
-    return (
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <BookMarked className="h-5 w-5" />
-                FLN Level Content Library
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                All {FLN_LEVELS_LIST.length} FLN levels across {classesPresent.length} class groups.
-                Click a card to open the level's worksheet template.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search level name or strand..."
-                className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-xs w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <select
-                value={classFilter}
-                onChange={(e) => setClassFilter(e.target.value)}
-                className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="ALL">All Classes ({FLN_LEVELS_LIST.length})</option>
-                {classesPresent.map(c => (
-                  <option key={c} value={c}>
-                    {c} ({FLN_LEVELS_LIST.filter(l => l.class === c).length})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-1 text-[10px] font-mono">
-            {classOrder.filter(c => classesPresent.includes(c)).map(c => (
-              <button
-                key={c}
-                onClick={() => setClassFilter(c)}
-                className={`px-2.5 py-1 rounded-full border transition-colors ${
-                  classFilter === c
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
-                }`}
-              >
-                {c} · {FLN_LEVELS_LIST.filter(l => l.class === c).length}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-6">
-            {filtered.map(level => (
-              <div
-                key={level.id}
-                className="text-left border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <span className="inline-block text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                    Level {level.id}
-                  </span>
-                  <span className="text-[9px] font-mono font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                    {level.class}
-                  </span>
-                </div>
-                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug min-h-[2.5rem]">
-                  {level.name}
-                </div>
-                <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-                  <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">
-                    {level.strand}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filtered.length === 0 && (
-            <div className="text-center text-xs text-slate-400 dark:text-slate-500 py-12">
-              No levels match your search.
-            </div>
-          )}
-
-          {filtered.length > 0 && (
-            <div className="mt-4 text-[10px] font-mono text-slate-400 dark:text-slate-500 text-right">
-              Showing {filtered.length} of {FLN_LEVELS_LIST.length} levels
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    return <ContentPanelView />;
   }
 
   if (panel === 'analytics') {
@@ -1765,6 +1804,13 @@ const students = apiStudents.length > 0 ? apiStudents : STUDENTS_FALLBACK;
     );
   }
 
-  // Fallback for any unmatched panel — renders the roles workspace (dashboard) as the content
-  return null;
+  // Fallback for any unmatched panel — avoids blank screen
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center space-y-3">
+      <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">FLN Assessment Portal</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+        Viewing module: <span className="font-bold text-indigo-600 dark:text-indigo-400">{panel}</span>
+      </p>
+    </div>
+  );
 };
