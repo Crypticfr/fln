@@ -21,4 +21,8 @@ Make user authentication persistent using MongoDB Atlas while keeping the local 
 - `GET /api/db-status` - Checks whether MongoDB or local JSON DB is active.
 
 ## Screenshots
-<!-- PASTE SCREENSHOT: Login Page & Active MongoDB Atlas connection indicator in the header -->
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/bedca80e-745d-4eac-b3bd-98e445febd20" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/25c8db38-2feb-4905-87fe-ea93f1d6a42f" />
+
+
