@@ -22,3 +22,21 @@ Add an interactive curriculum browser so teachers and administrators can explore
 3. **Main Endpoints**:
    - `GET /api/content/levels` - List all 93 levels with metadata.
    - `GET /api/content/levels/:levelId` - Get full details, sub-levels, and questions for a specific level.
+
+## Screenshots
+
+### 1. Main Curriculum Explorer
+All 93 levels across 7 class groups with search, class filtering, and strand filters.
+<!-- PASTE SCREENSHOT: Content Library grid showing level cards and filters -->
+
+### 2. Level Detail — Learning Objectives & Outcomes
+Modal showing primary learning objective, pedagogical description, and target competency outcomes.
+<!-- PASTE SCREENSHOT: Level Overview tab showing objectives and outcomes -->
+
+### 3. Sub-Level Breakdown (.0, .1, .2)
+Scaffolded remediation tiers showing the core curriculum, guided hints, and concrete foundational support.
+<!-- PASTE SCREENSHOT: Sub-Levels tab showing 13.0, 13.1, 13.2 breakdowns -->
+
+### 4. Live Question Bank Preview
+Questions, answer keys, and diagram previews before generating worksheets.
+<!-- PASTE SCREENSHOT: Question Bank tab showing questions and check answer keys -->

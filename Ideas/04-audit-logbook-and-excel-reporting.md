@@ -16,3 +16,11 @@ Improve the operational logbook with role-based visibility, real-time search, an
 3. **Filter & Search UI**:
    - Fast client-side search across emails, school names, and activity types (`download`, `print`, `conduct`, `scan`, `verify`).
    - Visual status badges for `Success`, `Failed`, and `Delayed` operations.
+
+## Screenshots
+
+### 1. Audit Logbook Table & Role-Scoped View
+<!-- PASTE SCREENSHOT: Logbook table showing activity rows, search, and status badges -->
+
+### 2. Microsoft Excel (.xlsx) Export
+<!-- PASTE SCREENSHOT: Green 'Export to Excel (.xlsx)' button and downloaded spreadsheet -->

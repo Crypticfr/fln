@@ -19,3 +19,6 @@ Make user authentication persistent using MongoDB Atlas while keeping the local 
 - `POST /api/auth/login` - Validates email/password, returns JWT and user profile.
 - `GET /api/auth/me` - Returns current user info from the token.
 - `GET /api/db-status` - Checks whether MongoDB or local JSON DB is active.
+
+## Screenshots
+<!-- PASTE SCREENSHOT: Login Page & Active MongoDB Atlas connection indicator in the header -->
