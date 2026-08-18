@@ -29,5 +29,12 @@ Add a daily classroom attendance tracker where teachers can quickly mark attenda
 ### 1. Attendance Tracker Roster & Status Toggles
 <!-- PASTE SCREENSHOT: Attendance Tracker page with student roster, Present/Absent/Late toggles, and filters -->
 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/84623e89-6d56-4c6c-88e3-b3d444350ac9" />
+
+
 ### 2. Attendance Analytics & Excel Export
 <!-- PASTE SCREENSHOT: Summary metrics cards and Export to Excel (.xlsx) button -->
+
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/45aa6394-dd9b-4a2e-95a9-09172226dabb" />
+
