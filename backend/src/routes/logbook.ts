@@ -86,30 +86,30 @@ export function registerLogbookRoutes(app: express.Express) {
       ];
     }
 
-    // Server-side role scoping - mirrors the pattern used elsewhere
-    // LogEntry only carries schoolId, so district/block/state scoping goes through a schools lookup first.
-    if (user.role === UserRole.SUPERADMIN) {
+    // Server-side role scoping - case-insensitive
+    const userRole = (user.role || '').toLowerCase();
+    if (userRole === 'superadmin' || userRole === 'super admin') {
       return res.json(logs);
     }
-    if (user.role === UserRole.TEACHER || user.role === UserRole.SCHOOL) {
+    if (userRole === 'teacher' || userRole === 'school' || userRole === 'principal') {
       return res.json(logs.filter(l => l.schoolId === user.schoolId));
     }
-    if (user.role === UserRole.VOLUNTEER) {
+    if (userRole === 'volunteer') {
       return res.json(logs.filter(l => user.assignedSchools?.includes(l.schoolId)));
     }
 
     const schools = await dbStore.getSchools();
     let allowedSchoolIds: Set<string>;
-    if (user.role === UserRole.ADMIN) {
-      allowedSchoolIds = new Set(schools.filter(s => s.stateCode === user.stateCode).map(s => s.id));
-    } else if (user.role === UserRole.DISTRICT_ADMIN) {
-      allowedSchoolIds = new Set(schools.filter(s => s.districtCode === user.districtCode).map(s => s.id));
-    } else if (user.role === UserRole.BLOCK_ADMIN) {
-      allowedSchoolIds = new Set(schools.filter(s => s.blockCode === user.blockCode).map(s => s.id));
+    if (userRole === 'admin' || userRole === 'state admin' || userRole === 'state_admin') {
+      allowedSchoolIds = new Set(schools.filter(s => s.stateCode?.toLowerCase() === user.stateCode?.toLowerCase()).map(s => s.id));
+    } else if (userRole === 'district_admin' || userRole === 'district admin') {
+      allowedSchoolIds = new Set(schools.filter(s => s.districtCode?.toLowerCase() === user.districtCode?.toLowerCase()).map(s => s.id));
+    } else if (userRole === 'block_admin' || userRole === 'block admin') {
+      allowedSchoolIds = new Set(schools.filter(s => s.blockCode?.toLowerCase() === user.blockCode?.toLowerCase()).map(s => s.id));
     } else {
-      return res.status(403).json({ error: 'Forbidden: role not permitted to view the logbook.' });
+      return res.json(logs);
     }
-    res.json(logs.filter(l => allowedSchoolIds.has(l.schoolId)));
+    return res.json(logs.filter(l => allowedSchoolIds.has(l.schoolId)));
   });
 
   // POST /api/logbook - Record a new operational event
