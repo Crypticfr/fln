@@ -107,59 +107,49 @@ graph TD
 
 ## 4. Gaps Observed in the Code
 
-### Gap 1: No daily classroom attendance tracking
-- **Where**: `frontend/src/components/panels/AttendancePanel.tsx`
-- **What**: The app only showed a simple count of past diagnostic tests. There was no way for teachers to take daily roll calls (Present, Absent, Late, Excused) or track student attendance percentages.
-- **Why it matters**: If a student is failing math tests, teachers cannot tell if the child doesn't understand the concept or is just missing too many classes.
+### 1. No daily classroom attendance tracking
+- In `frontend/src/components/panels/AttendancePanel.tsx` and `backend/src/routes/`, the system only showed a count of past diagnostic exams rather than actual daily roll call.
+- Teachers had no way to mark attendance (Present, Absent, Late, Excused), making it hard to tell whether poor test scores were caused by learning difficulty or chronic absenteeism.
 
-### Gap 2: Curriculum levels were static files without in-app preview
-- **Where**: `FLN Levels Structure/` and `frontend/src/components/panels/ContentPanel.tsx`
-- **What**: All 93 level descriptions and question bank files were sitting in folders on disk. The UI only showed plain title cards with no details or question previews.
-- **Why it matters**: Teachers had no way in the app to check what learning goals, sub-levels (.0, .1, .2), or sample questions each level covers before giving worksheets to students.
+### 2. Curriculum levels were static files without in-app preview
+- In `FLN Levels Structure/` and `frontend/src/components/panels/ContentPanel.tsx`, all 93 level descriptions and question bank data were sitting as raw files on disk with no interactive preview in the UI.
+- Teachers could not inspect learning objectives, sub-level breakdowns (.0 Core, .1 Guided, .2 Concrete), or sample questions before creating student worksheets.
 
-### Gap 3: Logbook export was plain CSV without formatting
-- **Where**: `backend/src/routes/logbook.ts` and `frontend/src/components/LogbookView.tsx`
-- **What**: The logbook only exported raw CSV text with no column sizing or clean date formatting. Also, role checks in the backend were case-sensitive (`user.role === 'superadmin'`).
-- **Why it matters**: School administrators need readable Excel files (`.xlsx`) with formatted columns for reporting. Strict case-sensitive checks could also accidentally block valid users.
+### 3. Logbook export was plain CSV without formatting
+- In `frontend/src/components/LogbookView.tsx` and `backend/src/routes/logbook.ts`, log exports only downloaded raw, unformatted CSV text, and role checks in `/api/logbook` were strictly case-sensitive.
+- School administrators need clean Microsoft Excel (`.xlsx`) spreadsheets for reporting, and case-sensitive role checks risked blocking valid users.
 
-### Gap 4: Login tokens missed user location data
-- **Where**: `backend/src/auth.ts` and `backend/src/routes/auth.ts`
-- **What**: Login JWT tokens only stored basic user info, leaving out state, district, block, and school IDs.
-- **Why it matters**: The backend had to query the database on every single API request just to check where the user belongs, slowing down responses.
+### 4. JWT tokens missed user location data
+- In `backend/src/auth.ts` and `backend/src/routes/auth.ts`, login JWT tokens omitted user location fields (state, district, block, school IDs).
+- The backend had to query the database on every single API request just to check where a user was assigned, slowing down response times.
 
-### Gap 5: Sub-panel crashes caused full white screen errors
-- **Where**: `frontend/src/App.tsx`
-- **What**: Dashboard panels were not wrapped in an Error Boundary. If any panel threw an error, the whole screen went blank.
-- **Why it matters**: A small error in one panel should not crash the entire app for a teacher during class.
+### 5. Sub-panel crashes caused full white screen errors
+- In `frontend/src/App.tsx`, dashboard panels were not wrapped in a React Error Boundary (`frontend/src/components/ErrorBoundary.tsx`).
+- If an unexpected error happened in any sub-panel, the entire application crashed to a blank white screen rather than isolating the error and offering a reload button.
 
 ---
 
 ## 5. Ideas for the Project
 
-### Idea 1: Daily Classroom Attendance Tracker
-- **What**: A roll-call screen where teachers can pick a date, select their class, mark Present/Absent/Late, and save directly to the database.
-- **Why**: Makes daily roll call fast and helps see if attendance drops are linked to lower test scores.
-- **How**: Added `backend/src/routes/attendance.ts` with MongoDB storage and built `frontend/src/components/AttendanceTracker.tsx`.
+### 1. Daily Classroom Attendance Tracker
+- Add an interactive roll-call screen with date selection, class/section filters, instant status toggles, and Excel export backed by MongoDB Atlas (`backend/src/routes/attendance.ts` and `frontend/src/components/AttendanceTracker.tsx`).
+- Helps teachers take attendance in seconds and lets schools see if attendance drops are affecting student learning progress.
 
-### Idea 2: Interactive 93-Level Content Library Modal
-- **What**: A curriculum browser where teachers can search by strand or class, click any level card, and see learning goals, sub-levels (.0, .1, .2), and sample questions.
-- **Why**: Helps teachers quickly review what each level teaches before creating worksheets.
-- **How**: Added `backend/src/routes/content.ts` to parse level files and built `frontend/src/components/LevelDetailModal.tsx`.
+### 2. Interactive 93-Level Content Library Modal
+- Build an in-app curriculum explorer with search and strand filters that opens a modal showing learning objectives, sub-level progression (.0, .1, .2), and sample questions (`backend/src/routes/content.ts` and `frontend/src/components/LevelDetailModal.tsx`).
+- Allows teachers to quickly check what each level teaches before assigning worksheets.
 
-### Idea 3: Formatted Excel (.xlsx) Export
-- **What**: Replaced raw CSV downloads with formatted `.xlsx` spreadsheets with proper column widths and headers using SheetJS (`xlsx`).
-- **Why**: Generates clean, readable spreadsheets ready for school administration and state audits.
-- **How**: Added Excel export functions in `LogbookView.tsx` and `AttendanceTracker.tsx`.
+### 3. Formatted Excel (.xlsx) Export
+- Upgrade data export from raw CSV text to styled Microsoft Excel (`.xlsx`) files with auto-sized columns and formatted timestamps using SheetJS (`xlsx`) in `LogbookView.tsx` and `AttendanceTracker.tsx`.
+- Generates clean, readable spreadsheets ready for administrative audits and reporting.
 
-### Idea 4: Better JWT Token Scoping
-- **What**: Included the user's school and location info directly in the JWT token and made role checks case-insensitive.
-- **Why**: Speeds up API checks and avoids redundant database queries on every request.
-- **How**: Updated `backend/src/auth.ts`, `backend/src/routes/auth.ts`, and `backend/src/routes/logbook.ts`.
+### 4. Better JWT Token Scoping & Session Handling
+- Include user school and location metadata directly in the signed JWT token and normalize role checks to be case-insensitive (`backend/src/auth.ts` and `backend/src/routes/auth.ts`).
+- Avoids redundant database queries on every request and keeps teacher sessions working smoothly.
 
-### Idea 5: React Error Boundary for UI Protection
-- **What**: Wrapped dynamic dashboard panels in an Error Boundary that shows a friendly message and a "Reload View" button if a view crashes.
-- **Why**: Keeps the rest of the application working even if one panel runs into an issue.
-- **How**: Built `frontend/src/components/ErrorBoundary.tsx` and wrapped dashboard panels in `frontend/src/App.tsx`.
+### 5. React Error Boundary for UI Protection
+- Wrap dynamic dashboard panels in a React Error Boundary component (`frontend/src/components/ErrorBoundary.tsx`) in `frontend/src/App.tsx`.
+- Catches runtime rendering errors gracefully and shows a "Reload View" button so teachers never get stuck on a blank screen.
 
 ---
 
