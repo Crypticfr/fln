@@ -1,10 +1,16 @@
-# Feature Proposals & Ideas
+# Feature Proposals & Contributor Onboarding
 
-Technical proposals and documentation for implemented subsystems across the FLN platform.
+Technical documentation, contributor onboarding, and feature proposals for the FLN platform.
 
 ---
 
-## 📋 Feature Proposals
+## 📄 Contributor Onboarding Document
+
+- **[ONBOARDING-Subhajit-Samajpati.md](ONBOARDING-Subhajit-Samajpati.md)**: Mandatory comprehensive onboarding document containing project overview, system architecture, repository current state, identified code gaps, proposed technical ideas, and implemented contributions.
+
+---
+
+## 📋 Feature Proposals & Technical Specifications
 
 | # | Proposal Document | Summary |
 | :--- | :--- | :--- |
