@@ -12,6 +12,7 @@ dotenv.config({ path: path.resolve(__dotenv_dir, '..', '.env') });
 
 import express from 'express';
 import { dbStore, connectDB } from './db';
+import { validateConceptPrerequisites } from './competencyPrerequisites';
 import { registerAuthRoutes } from './routes/auth';
 import { registerAnnouncementRoutes } from './routes/announcements';
 import { registerStatsRoutes } from './routes/stats';
@@ -64,6 +65,26 @@ async function startServer() {
 
   // Initialize file-based DB
   await dbStore.init();
+
+  // Validate the prerequisite graph once at startup. The graph is a static,
+  // compiled-in table, so any unknown conceptId or cycle in it is a build
+  // error — fail loudly rather than silently emit malformed reasoning later.
+  // Runs synchronously here so a bad graph prevents the server from
+  // accepting requests, not just from rendering them correctly.
+  const prereqReport = validateConceptPrerequisites();
+  if (!prereqReport.isValid) {
+    console.error('[competencyPrerequisites] prerequisite graph is INVALID at startup; refusing to start');
+    console.error(`[competencyPrerequisites]   totalConceptsWithPrerequisites: ${prereqReport.totalConceptsWithPrerequisites}`);
+    console.error(`[competencyPrerequisites]   totalEdges: ${prereqReport.totalEdges}`);
+    if (prereqReport.unknownConceptIds.length > 0) {
+      console.error(`[competencyPrerequisites]   unknownConceptIds (${prereqReport.unknownConceptIds.length}): ${prereqReport.unknownConceptIds.join(', ')}`);
+    }
+    for (const cycle of prereqReport.cycles) {
+      console.error(`[competencyPrerequisites]   cycle: ${cycle.join(' -> ')}`);
+    }
+    process.exit(1);
+  }
+  console.log(`[competencyPrerequisites] prerequisite graph OK — ${prereqReport.totalConceptsWithPrerequisites} concepts, ${prereqReport.totalEdges} edges, 0 unknown ids, 0 cycles`);
 
   const app = express();
   app.use(express.json({ limit: '100mb' }));
