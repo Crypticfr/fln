@@ -11,12 +11,8 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends (React.Component as { new(props: Props): {
-  props: Props;
-  state: State;
-  setState(state: Partial<State> | ((prevState: State) => Partial<State>)): void;
-} }) {
-  public state: State = {
+export class ErrorBoundary extends React.Component<Props, State> {
+  public override state: State = {
     hasError: false,
     error: null,
   };
@@ -25,7 +21,7 @@ export class ErrorBoundary extends (React.Component as { new(props: Props): {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error in component tree:', error, errorInfo);
   }
 
@@ -36,7 +32,7 @@ export class ErrorBoundary extends (React.Component as { new(props: Props): {
     }
   };
 
-  public render() {
+  public override render() {
     if (this.state.hasError) {
       return (
         <div className="p-8 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 rounded-2xl shadow-sm text-center space-y-4 max-w-2xl mx-auto my-8">
