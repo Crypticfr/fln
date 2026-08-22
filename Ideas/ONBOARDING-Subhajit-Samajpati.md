@@ -1,7 +1,7 @@
 # FLN Platform Contributor Onboarding & Technical Proposal
 
 **Contributor**: Subhajit Samajpati  
-**Role**: Software Engineering Intern / Contributor  
+**Role**: Software Engineering Contributor  
 **Repository**: [Vicharanashala FLN Platform](https://github.com/vicharanashala/fln)  
 **Submission Date**: August 2026  
 
@@ -9,31 +9,31 @@
 
 ## 1. What is FLN?
 
-**FLN** stands for **Foundational Literacy and Numeracy**. In the Indian school education system—aligned with national initiatives such as the **NIPUN Bharat Mission**—FLN represents the vital foundational skills in reading, comprehension, and basic mathematics that every child must achieve by Grade 3. This repository implements the **Foundational Numeracy (Mathematics)** dimension of that framework, specifically serving children in the age bracket of 3 to 9+ years across **Preschool 1, Preschool 2, Preschool 3, Class 1, Class 2, Class 3, and Class 4** (Stages 1 through 7).
+**FLN** stands for **Foundational Literacy and Numeracy**. In Indian school education (under national guidelines like the NIPUN Bharat Mission), FLN refers to the essential reading and basic math skills that children need to master by Grade 3. If a child falls behind in these early years, they struggle with almost every subject later on. This repository focuses specifically on the **foundational mathematics** side for kids from Preschool 1 up to Class 4 (Stages 1 through 7, roughly ages 3 to 9+).
 
 ### The Educational Problem It Solves
-The core educational crisis in foundational schooling is not a lack of general textbooks or standard worksheets; it is **classroom heterogeneity** combined with severe **teacher time constraints**:
-1. **Wide Variance in Student Preparedness**: In a single Class 2 or Class 3 classroom, one child may struggle with basic one-to-one counting (Level 1–5), while another can comfortably perform two-digit regrouping (Level 35+). Delivering a single, uniform lecture or worksheet leaves lagging students permanently behind while failing to challenge proficient ones.
-2. **Multi-Grade Teaching Realities**: In many rural, tribal, and under-resourced schools, a single teacher simultaneously manages multiple grades in a single room. Manually diagnosing every child’s baseline, generating differentiated remedial papers, and hand-grading dozens of daily tests is practically impossible without software automation.
-3. **The Digital Divide & Physical Paper Constraint**: Government primary schools often lack computer labs, tablets, or stable student internet access. The children cannot take quizzes on screens. **The educational interaction must happen on physical paper**, while the computation, generation, grading, and longitudinal analytics must happen in software.
+The main issue in primary classrooms is that **students are rarely at the same learning level**:
+1. **Different Starting Points**: In a single Class 2 or Class 3 classroom, one child might still be learning basic single-digit counting, while another is already comfortable with two-digit addition. If a teacher gives everyone the exact same worksheet, the struggling kids fall further behind and the advanced kids get bored.
+2. **Teachers Have Limited Time**: In many government primary schools, a single teacher has to teach multiple grades in the same classroom. Making custom worksheets and grading dozens of papers by hand every day is just not practical without software help.
+3. **No Screens in the Classroom**: Students in these schools do not have laptops or tablets. **All the actual learning and test-taking has to happen on physical paper sheets.** The software's job is to handle the background work: creating custom test papers, printing them out, scanning the answers using a phone camera, and grading them automatically.
 
 ### The Purpose of the Platform
-The FLN platform bridges this gap by creating an automated, paper-first instructional feedback loop:
-1. **Baseline & Continuous Diagnostics**: Evaluates each student's exact starting point along a structured 93-level competency continuum.
-2. **Personalized Worksheet Engine**: Generates customized, printable A4 PDF worksheets tailored to each student's current level and weak concept areas.
-3. **Optical & AI Assessment Pipeline**: Allows teachers and field volunteers to capture student worksheets using standard phone cameras, automatically extracts answers via Intelligent Character Recognition (ICR / OMR), and evaluates responses against strict answer keys.
-4. **Competency-Driven Remediation**: Automatically transitions students through mastery sub-levels (`.0` Core Mastery, `.1` Guided Remediation, `.2` Concrete Foundations) and builds actionable prerequisite learning paths.
-5. **Hierarchical Governance**: Aggregates actionable real-time analytics for school principals, block education officers, district magistrates, state coordinators, and national superadmins.
+The platform gives teachers a practical way to teach each child according to their actual level:
+- It tests each child to find their exact baseline on a 93-level math scale.
+- It generates printable A4 PDF worksheets tailored to each student's current weak spots.
+- It lets teachers take a photo of the completed paper, reads the handwritten answers using an optical scanner (ICR), and grades it automatically.
+- It suggests the next level or remedial practice based on what the child missed.
+- It gives school heads, block officers, and state coordinators clear summary reports on how their schools are progressing.
 
 ---
 
 ## 2. What do you understand by FLN as a system?
 
-The FLN platform is structured around a multi-tier governance hierarchy reflecting India's public education administration, coordinated with student profiles, pedagogical competencies, automated paper generators, and optical evaluation pipelines.
+The platform connects students, teachers, school heads, and education administrators through a structured 7-tier role system that matches how Indian school administration works.
 
 ```mermaid
 graph TD
-    SA[Superadmin / National Lab] --> A[State Admin]
+    SA[Superadmin / National Team] --> A[State Admin]
     A --> DA[District Admin]
     DA --> BA[Block Admin]
     BA --> S[School Principal]
@@ -42,175 +42,161 @@ graph TD
     T --> P[Classroom & Students]
     V --> P
 
-    subgraph Evaluation Cycle
-        P -->|Print & Administer| WS[Physical Paper Worksheet]
-        WS -->|Phone Camera Scan| ICR[ICR / OMR Scanner]
-        ICR -->|Optical Evaluation| REP[Evaluation Report & Remediation]
-        REP -->|Mastery Update| LVL[FLN Level Progression L1-L93]
-        LVL -->|Regenerate Targeted Papers| WS
+    subgraph Classroom Workflow
+        P -->|Print & Distribute| WS[Physical Paper Worksheet]
+        WS -->|Phone Camera Scan| ICR[ICR / Optical Scanner]
+        ICR -->|Auto Grading| REP[Evaluation Report & Remediation]
+        REP -->|Update Level| LVL[FLN Level Progression L1-L93]
+        LVL -->|Generate Next Paper| WS
     end
 ```
 
-### Core Entities
+### Main Entities in the System
 
 1. **Student** (`backend/src/db.ts`):
-   - Represents an enrolled child with a unique ID, clean numeric display ID (`numericDisplayId`), masked Aadhaar (`aadharMasked`), age, class group (`Preschool 1` through `Class 4`), section, and assigned school.
-   - Maintains continuous pedagogical state: `currentLevel` (1–93), `currentSubLevel` (0 = Core, 1 = Guided, 2 = Concrete), `targetLevel`, and an immutable `levelHistory` tracking every placement date and milestone.
+   - Represents an enrolled student with their name, class, section, numeric display ID, masked Aadhaar ID, and assigned school.
+   - Tracks their math progress: `currentLevel` (1 to 93), `currentSubLevel` (0 for Core Mastery, 1 for Guided Remediation, 2 for Concrete Foundations), `targetLevel`, and a `levelHistory` array recording every past test placement.
 
 2. **School** (`backend/src/db.ts`):
-   - Represents an educational facility tied to a specific `stateCode`, `districtCode`, and `blockCode`.
-   - Carries a `strength` classification (`high` vs. `low`), determining whether paper generation is managed directly by on-site teachers or by roving Block Volunteers.
+   - Represents a school with its state, district, and block codes.
+   - Marked as `high` or `low` strength. High-strength schools have teachers who handle paper generation and scanning directly. Low-strength schools can be supported by roving block volunteers.
 
-3. **User Hierarchy & Role-Based Access Control (RBAC)** (`backend/src/auth.ts`, `backend/src/db.ts`):
-   - **Superadmin**: National oversight (IIT Ropar / Vicharanashala team); manages national curriculum maps, system parameters, user provisioning, and full system audit logs.
-   - **Admin (State)**: State-wide performance analytics and coordinator escalations across all districts in the state.
-   - **District Admin**: Oversees blocks, school clusters, and district-level mastery targets.
-   - **Block Admin**: Manages local schools, verifies cluster audits, and coordinates volunteers.
-   - **School (Principal)**: Monitors school-wide teacher distribution, class mastery summaries, and placement certificates.
-   - **Teacher**: Administers diagnostic tests, marks daily roll calls, scans completed answer sheets, and reviews automated evaluations.
-   - **Volunteer**: Assists low-bandwidth, low-resource schools by printing worksheets and digitizing answer sheets.
+3. **User Roles & Permissions** (`backend/src/auth.ts`, `backend/src/db.ts`):
+   - **Superadmin**: National administrators (IIT Ropar / Vicharanashala team) who manage the curriculum map, user accounts, and system-wide settings.
+   - **State Admin**: Monitors district performance across their assigned state.
+   - **District Admin**: Tracks block-level performance and school clusters.
+   - **Block Admin**: Coordinates local schools and manages volunteers.
+   - **School (Principal)**: Checks teacher assignments, class averages, and student placement certificates.
+   - **Teacher**: Creates diagnostic papers, takes daily student attendance, scans completed answer sheets, and reviews test results.
+   - **Volunteer**: Helps print papers and scan sheets in remote or low-connectivity schools.
 
 4. **Curriculum Framework & Competencies** (`backend/src/config/curriculumMap.ts`, `backend/src/competencyPrerequisites.ts`):
-   - 93 discrete FLN levels across 6 mathematical strands: *Number Sense, Number Operations, Shapes & Geometry, Measurement, Patterns & Algebra, and Data Handling*.
-   - Keyed by unique concept identifiers (`conceptId`, e.g., `S1.1` to `S7.18`).
-   - A compiled, acyclic prerequisite graph (`CONCEPT_PREREQUISITES`) that enables the system to trace failed concepts back to their foundational prerequisites.
+   - 93 FLN levels divided across 6 math strands: *Number Sense, Number Operations, Shapes & Geometry, Measurement, Patterns & Algebra, and Data Handling*.
+   - Each level links to a specific concept ID (like `S1.1` to `S7.18`).
+   - A dependency graph (`CONCEPT_PREREQUISITES`) connects concepts so that when a student fails a question, the system can trace back to the exact foundational skill they missed.
 
-5. **Worksheet & Diagnostic Papers** (`backend/src/db.ts`, `backend/src/paperGenerator.ts`):
-   - Printable question papers rendered via Puppeteer into standard A4 PDF format with scannable QR codes, student IDs, and aligned answer grid bounding boxes.
+5. **Worksheets & Diagnostic Papers** (`backend/src/db.ts`, `backend/src/paperGenerator.ts`):
+   - Printable question papers generated as standard A4 PDFs using Puppeteer, with QR codes and aligned answer boxes for easy scanning.
 
-6. **Evaluation Report & Educational Reasoning** (`backend/src/db.ts`):
-   - Generated post-ICR scan containing per-question correctness, overall score, narrative synthesis, concept mastery breakdown (`Strong`, `Satisfactory`, `Needs Practice`), and automated pedagogical reasoning explaining why a child was placed at a specific level.
+6. **Evaluation Reports** (`backend/src/db.ts`):
+   - Generated after an answer sheet is scanned. Contains the child's score, per-question breakdown, skill ratings (*Strong*, *Satisfactory*, *Needs Practice*), and an explanation for why the child was placed at that level.
 
-7. **Student Attendance Record** (`backend/src/routes/attendance.ts`):
-   - Daily roll-call ledger capturing `Present`, `Absent`, `Late`, and `Excused` statuses per student, class group, and date, correlating attendance regularity directly with FLN level velocity.
+7. **Student Attendance Records** (`backend/src/routes/attendance.ts`):
+   - Daily roll call tracking (*Present*, *Absent*, *Late*, *Excused*) per student and class, helping teachers see if poor test scores are linked to missed school days.
 
-8. **System Logbook & Audit Trail** (`backend/src/routes/logbook.ts`):
-   - Immutable security ledger recording all operational events (downloads, prints, scans, evaluations, tickets) with geographical scoping and Excel export capabilities.
+8. **Logbook Audit Trail** (`backend/src/routes/logbook.ts`):
+   - An activity log recording when worksheets are downloaded, printed, or scanned, with role filtering and Excel export options.
 
 ---
 
 ## 3. Current State of the Repository — What Has Been Done So Far
 
-### Technology Stack & Architecture
-- **Frontend**: Single Page Application built with **React 19**, **TypeScript**, **Vite**, **Tailwind CSS v4**, and **Lucide React**. Utilizes client-side state management, modular panel routing, and **SheetJS (`xlsx`)** for offline workbook compilation.
-- **Backend**: **Node.js (ESM)** with **Express 4**, bundled using **esbuild**. Uses **JSON Web Tokens (JWT)** and **bcrypt** for credential verification and role scoping.
-- **Database & Storage**: Dual-tier storage architecture—connects to **MongoDB Atlas** for persistent multi-tenant collections (`users`, `students`, `schools`, `evaluation_reports`, `attendance`, `logbook`) with seamless, automatic fallback to local JSON file storage (`backend/data/`) for offline field environments.
-- **AI & Optical Pipeline (`ai-services/`)**: Python-based computer vision pipeline executing image thresholding, perspective warping, blue-ink isolation, and OCR classification (via PyMuPDF, OCR.space, or local Ollama), with Google Gemini LLM API fallbacks for diagnostic generation and worksheet evaluation.
+### Tech Stack & Architecture
+- **Frontend**: Single Page Application built with **React 19**, **TypeScript**, **Vite**, **Tailwind CSS v4**, and **Lucide React** icons. Uses **SheetJS (`xlsx`)** to generate formatted Excel files directly in the browser.
+- **Backend**: Built with **Node.js** and **Express 4** in `backend/src/`, bundled using **esbuild**. Uses **JWT** tokens and **bcrypt** for authentication and role checks.
+- **Database**: Connects to **MongoDB Atlas** for storing users, students, schools, test reports, attendance, and logs. It also has an automatic local JSON file fallback (`backend/data/`) so developers and testers can run the app offline without setting up a remote database.
+- **AI & OCR Pipeline (`ai-services/`)**: Python scripts using OpenCV and PyMuPDF to crop answer boxes, filter pen ink, and read student handwriting, with fallbacks to the Gemini API for test generation and evaluation.
 
-### Implemented Modules & Workflows
-1. **Modular Route System**: Backend routes split into domain-specific modules in `backend/src/routes/` (`auth`, `students`, `teachers`, `schools`, `classes`, `evaluation`, `diagnosticBulk`, `attendance`, `content`, `logbook`, `analytics`, `geo`).
-2. **Componentized Frontend Dashboards**: Dedicated role dashboards in `frontend/src/components/dashboards/` (`TeacherDashboard`, `VolunteerDashboard`, `AdminDashboard`, `SuperadminDashboard`, `SchoolDashboard`) and modular panel views in `frontend/src/components/panels/`.
-3. **Assessment Workflows**: Standardized 10-question diagnostic test generation, bulk CSV student onboarding, two-stage ICR scanner, teacher review override screens, and automated certification issuance.
-4. **Curriculum Reasoning Engine**: Prerequisite DAG validation at server startup (`validateConceptPrerequisites`), linking student error patterns directly to foundational competency gaps.
+### Implemented Modules & Features
+1. **Modular Backend Routes**: Backend routes are organized into clean files in `backend/src/routes/` (`auth`, `students`, `teachers`, `schools`, `classes`, `evaluation`, `diagnosticBulk`, `attendance`, `content`, `logbook`, `analytics`, `geo`).
+2. **Dedicated Role Dashboards**: Separate dashboard components in `frontend/src/components/dashboards/` for Teachers, Volunteers, Principals, Admins, and Superadmins.
+3. **Modular Panel Views**: Extracted panels in `frontend/src/components/panels/` for student lists, student profiles, diagnostic tests, worksheets, performance, reports, and system settings.
+4. **Assessment & Grading Workflow**: Diagnostic paper generation, bulk student CSV upload, two-stage phone camera scanning, teacher override screens, and level progression logic.
 
 ---
 
 ## 4. Gaps Observed in the Code
 
-Through thorough codebase inspection and runtime testing, I identified five major technical and functional gaps:
+During my review of the codebase, I identified five practical technical and product gaps:
 
-### Gap 1: Absence of Daily Classroom Attendance Tracking & Correlation with Learning Gaps
-- **Where**: `backend/src/routes/` (completely lacked attendance endpoints/models) and `frontend/src/components/panels/AttendancePanel.tsx` (lines 8–42).
-- **What**: The repository previously only displayed an `examAttendance` placeholder that counted past diagnostic exams. There was no capability for teachers to record daily classroom roll calls (Present, Absent, Late, Excused) or analyze attendance trends.
-- **Why it matters**: Educators could not distinguish whether a child’s low assessment score was caused by pedagogical difficulty or chronic absenteeism. Without roll-call data, schools cannot identify attendance-driven learning loss.
+### Gap 1: No Daily Student Attendance Tracking
+- **Where**: `backend/src/routes/` and `frontend/src/components/panels/AttendancePanel.tsx` (lines 8–42).
+- **What**: The repository only had a simple view that counted past diagnostic exams (`examAttendance`). There was no way for teachers to take daily classroom attendance (Present, Absent, Late, Excused) or view student attendance percentages.
+- **Why it matters**: If a student is struggling with math assessments, teachers and principals could not tell whether the child has trouble understanding the concept or is simply missing too many classes. Daily attendance data is necessary to understand student learning loss.
 
-### Gap 2: Disconnected 93-Level Curriculum Files Without Interactive Teacher Inspection
-- **Where**: `FLN Levels Structure/` (static directory of 93 markdown folders) and `frontend/src/components/panels/ContentPanel.tsx` (lines 11–128).
-- **What**: The 93-level FLN curriculum and the question bank (`data/questionBank.json`) existed as raw files on disk. The frontend `ContentPanel` only rendered static card titles without allowing teachers to drill into learning objectives, sub-level progressions (`.0` Core, `.1` Guided, `.2` Concrete), or question bank previews.
-- **Why it matters**: Teachers had no way within the application to inspect what skills and questions a level assessed before generating test sheets for their students.
+### Gap 2: Curriculum Levels Were Just Static Files Without an In-App Viewer
+- **Where**: `FLN Levels Structure/` (folder with 93 markdown directories) and `frontend/src/components/panels/ContentPanel.tsx` (lines 11–128).
+- **What**: All 93 level descriptions and question bank data (`data/questionBank.json`) were sitting as static files on disk. The frontend `ContentPanel` only rendered plain cards with level titles, and clicking them did nothing. Teachers could not inspect what learning objectives, sub-levels (.0 Core, .1 Guided, .2 Concrete), or sample questions were included in each level.
+- **Why it matters**: Teachers had to manually open raw files on their computers to see what each level covered before assigning worksheets to their students.
 
-### Gap 3: Raw CSV-Only Logbook Export & Inconsistent Case-Sensitive Role Scoping
+### Gap 3: Logbook Export Was Basic CSV Text and Role Checks Were Case-Sensitive
 - **Where**: `backend/src/routes/logbook.ts` (lines 10–40) and `frontend/src/components/LogbookView.tsx` (lines 125–160).
-- **What**: Audit log exports relied on basic unformatted CSV concatenation. In addition, role-scoping checks in `/api/logbook` used strict case-sensitive comparisons (`user.role === 'superadmin'`), which failed if JWTs or client headers passed variant casings.
-- **Why it matters**: Administrative compliance and governmental reporting require structured Microsoft Excel (`.xlsx`) registers with auto-sized columns and formatted timestamps. Inconsistent role checks risked leaking cross-school logs or blocking authorized users.
+- **What**: The export button downloaded raw, unformatted CSV text without custom columns or clean date formatting. In addition, role checks in `/api/logbook` used strict case-sensitive comparisons (`user.role === 'superadmin'`), which could fail if the token had slight casing differences.
+- **Why it matters**: School administrators need readable Microsoft Excel (`.xlsx`) spreadsheets for reviews and reporting. Case-sensitive role checks could also accidentally block valid users from seeing their school logs.
 
-### Gap 4: Ephemeral JWT Claims & Lack of Resilient Session Caching
+### Gap 4: JWT Tokens Missed User Location Information
 - **Where**: `backend/src/auth.ts` (lines 18–35) and `backend/src/routes/auth.ts` (lines 45–55).
-- **What**: JWT tokens were issued with minimal payloads (`sub`, `email`, `role`), omitting geo-scoping fields (`stateCode`, `districtCode`, `blockCode`, `schoolId`, `assignedSchools`). As a result, every authenticated request was forced to execute synchronous database queries to reconstruct user context.
-- **Why it matters**: Created unnecessary database overhead and caused session degradation if MongoDB Atlas experienced latency or intermittent disconnection during field usage.
+- **What**: Login JWT tokens only included the user ID, email, and role, leaving out location fields like `stateCode`, `districtCode`, `blockCode`, and `schoolId`. As a result, the backend had to query the database on every single API request just to check where the user was assigned.
+- **Why it matters**: This added unnecessary database lookups on every request and could cause session dropouts if MongoDB had a brief connection slowdown.
 
-### Gap 5: Fragile Sub-Panel Error Handling & Missing UI Error Boundaries
+### Gap 5: No Error Boundary to Catch Component Crashes
 - **Where**: `frontend/src/App.tsx` (lines 200–260) and `frontend/src/components/ErrorBoundary.tsx`.
-- **What**: Dynamic dashboard panels lacked React component error boundaries. An unhandled exception or malformed payload in any sub-panel caused the entire application to crash to a blank white screen.
-- **Why it matters**: Severely impacted field reliability during classroom trials where teachers operating on low-end devices could lose active worksheet workflows due to minor rendering glitches.
+- **What**: Dashboard panels were not wrapped in a React Error Boundary. If an unexpected error or missing property occurred in any sub-panel, the entire browser window crashed to a blank white screen.
+- **Why it matters**: If a teacher running a classroom session hits an error in one panel, they should not get locked out of the whole application. The error should be caught so they can click "Reload View" or return to their main dashboard.
 
 ---
 
 ## 5. Ideas for the Project
 
-Based on the identified gaps, I proposed and designed five concrete architectural enhancements:
+Based on the gaps above, I designed and implemented five straightforward improvements:
 
-```mermaid
-graph LR
-    A[Proposed Enhancements] --> B[Daily Attendance Tracker]
-    A --> C[Interactive Content Explorer]
-    A --> D[Multi-Sheet Excel Reporting]
-    A --> E[Hardened JWT & Session Persistence]
-    A --> F[React 19 Error Boundary]
+### Idea 1: Daily Classroom Attendance Tracker with Class Filters and Excel Export
+- **What**: A dedicated daily attendance screen where teachers can choose a date, pick their class and section, toggle student statuses (*Present*, *Absent*, *Late*, *Excused*), click "Mark All Present" for quick entry, and download an Excel sheet.
+- **Why**: Gives teachers an easy way to take roll call in seconds and helps schools see if attendance drops are affecting student math progress.
+- **How**: Built `backend/src/routes/attendance.ts` (with upsert operations to the MongoDB `attendance` collection) and created `frontend/src/components/AttendanceTracker.tsx`.
 
-    B --> B1[Roll-Call Marking & Growth Analytics]
-    C --> C1[93-Level Drilldown & Question Bank Preview]
-    D --> D1[Automated XLSX Workbook Generation]
-    E --> E1[Enriched Geo-Claims & Atlas Caching]
-    F --> F1[Graceful Failure & View Self-Healing]
-```
+### Idea 2: Interactive 93-Level Content Library with Popup Modal
+- **What**: An in-app curriculum explorer where teachers can search by strand or class, click any level card, and open a modal showing the full learning objectives, sub-level breakdown (.0, .1, .2), and sample questions from the question bank.
+- **Why**: Helps teachers quickly review what each level covers before choosing worksheets for their students.
+- **How**: Built `backend/src/routes/content.ts` to parse markdown files and question data, and created `frontend/src/components/LevelDetailModal.tsx` wired into `ContentPanel.tsx`.
 
-### Idea 1: Full-Featured Classroom Attendance Tracker with FLN Velocity Analytics
-- **What**: A complete daily roll-call tracking module with date picker, class/section filters, one-click status toggling (`Present`, `Absent`, `Late`, `Excused`), "Mark All Present" batch actions, and attendance-to-FLN growth analytics.
-- **Why**: Equips teachers with an effortless daily roll-call tool while providing administrators with correlation data between attendance regularity and competency advancement.
-- **How**: Implemented `backend/src/routes/attendance.ts` with upsert queries to MongoDB `attendance` collection, paired with `frontend/src/components/AttendanceTracker.tsx`.
+### Idea 3: Formatted Excel (.xlsx) Export for Logbook and Attendance
+- **What**: Upgraded data export from plain CSV text to real Microsoft Excel (`.xlsx`) files with auto-sized column widths, clean headers, and formatted timestamps using SheetJS (`xlsx`).
+- **Why**: Produces clean, readable spreadsheets ready for administrative audits and state reporting.
+- **How**: Added Excel generation in `frontend/src/components/LogbookView.tsx` and `frontend/src/components/AttendanceTracker.tsx`.
 
-### Idea 2: Interactive FLN Content Library & 93-Level Drilldown Modal
-- **What**: An interactive curriculum explorer covering all 93 levels across 7 class groups, featuring dynamic markdown parsing of learning objectives, sub-level remediation scaffolds (`.0`, `.1`, `.2`), and live question bank previews.
-- **Why**: Empowers teachers to inspect pedagogical competencies and sample problems directly in the UI before assigning worksheets.
-- **How**: Built `backend/src/routes/content.ts` (parsing `FLN Levels Structure/` and `questionBank.json`) and created `frontend/src/components/LevelDetailModal.tsx`, integrated into `ContentPanel.tsx`.
+### Idea 4: Better JWT Token Scoping and Session Handling
+- **What**: Included the user's school and location information directly in the signed JWT token, normalized role checks so they are not case-sensitive, and made sure user data falls back cleanly if MongoDB is temporarily offline.
+- **Why**: Speeds up API checks, avoids redundant database queries on every request, and keeps teacher sessions working smoothly.
+- **How**: Updated `backend/src/auth.ts`, `backend/src/routes/auth.ts`, and `backend/src/routes/logbook.ts`.
 
-### Idea 3: Native Multi-Column Microsoft Excel (`.xlsx`) Export Engine
-- **What**: Professional spreadsheet generation integrated across Audit Logbook and Attendance modules using SheetJS (`xlsx`).
-- **Why**: Generates formatted, auditor-compliant `.xlsx` workbooks with custom column widths, summary rows, and standardized date formatting.
-- **How**: Integrated client-side workbook compilation in `frontend/src/components/LogbookView.tsx` and `frontend/src/components/AttendanceTracker.tsx`.
-
-### Idea 4: Hardened JWT Scoping, Case-Insensitive RBAC, and MongoDB Session Persistence
-- **What**: Enriched JWT payloads containing full user metadata and geo-scoping claims, case-insensitive role normalization, and seamless fallback between MongoDB Atlas and local storage.
-- **Why**: Eliminates redundant database round-trips, prevents unauthorized cross-school data access, and maintains uninterrupted teacher sessions.
-- **How**: Implemented in `backend/src/auth.ts`, `backend/src/routes/auth.ts`, and `backend/src/routes/logbook.ts`.
-
-### Idea 5: Component-Level Error Isolation & React 19 Self-Healing UI
-- **What**: Type-safe React 19 `ErrorBoundary` wrapping dynamic dashboard panels to catch runtime rendering errors and provide one-click recovery.
-- **Why**: Prevents application-wide white screen crashes and ensures high resilience on low-end school devices.
-- **How**: Implemented `frontend/src/components/ErrorBoundary.tsx` and wrapped dashboard routing in `frontend/src/App.tsx`.
+### Idea 5: React Error Boundary for Safer UI
+- **What**: Wrapped dynamic dashboard panels in a type-safe React Error Boundary component that catches runtime errors and shows a friendly "Reload View" button instead of crashing to a blank screen.
+- **Why**: Protects teachers from losing their active dashboard session if a minor rendering error occurs.
+- **How**: Built `frontend/src/components/ErrorBoundary.tsx` and connected it inside `frontend/src/App.tsx`.
 
 ---
 
 ## 6. Your Contribution
 
-During this onboarding and development cycle, I have implemented, integrated, and verified the following concrete contributions:
+During this onboarding and development cycle, I implemented, tested, and integrated the following features into the codebase:
 
-### 1. Daily Student Attendance Tracking Subsystem
+### 1. Student Attendance Tracking Subsystem
 - **Backend Endpoints** (`backend/src/routes/attendance.ts`):
-  - `GET /api/attendance`: Filter attendance by date, school, class group, and section.
-  - `POST /api/attendance/mark`: Batch upsert daily roll-call records into MongoDB Atlas `attendance` collection with in-memory fallback.
-  - `GET /api/attendance/stats`: Calculates overall attendance rates, top attendees, and learning growth correlation indicators.
+  - `GET /api/attendance`: Fetches attendance filtered by date, school, class group, and section.
+  - `POST /api/attendance/mark`: Saves or updates daily attendance records in MongoDB with in-memory fallback.
+  - `GET /api/attendance/stats`: Calculates attendance rates, top attendees, and attendance-to-progress trends.
 - **Frontend Interface** (`frontend/src/components/AttendanceTracker.tsx`):
-  - Interactive roll-call grid with date selector, class/section filters, instant status toggles (`Present`/`Absent`/`Late`/`Excused`), batch "Mark All Present", and formatted Excel (`.xlsx`) export.
-  - Wired into `frontend/src/components/PanelViews.tsx` for teachers, school admins, and volunteers.
+  - Created a responsive roll-call table with a date picker, class/section dropdowns, one-click status toggles, a "Mark All Present" button, and an Excel (`.xlsx`) download option.
+  - Connected it into `frontend/src/components/PanelViews.tsx` for teachers, school heads, and volunteers.
 
-### 2. FLN Content Library & Curriculum Drilldown Modal
+### 2. FLN Content Library & Level Detail Modal
 - **Backend Content API** (`backend/src/routes/content.ts`):
-  - `GET /api/content/levels`: Returns all 93 levels with strand, class, stage, and question count metadata.
-  - `GET /api/content/levels/:levelId`: Dynamically parses markdown files from `FLN Levels Structure/` to extract pedagogical objectives, descriptions, learning outcomes, and sub-levels.
-  - `GET /api/content/levels/:levelId/questions`: Retrieves matching live question bank items from `data/questionBank.json` or algorithmic question generators.
-- **Frontend Explorer & Modal** (`frontend/src/components/LevelDetailModal.tsx`, `frontend/src/components/panels/ContentPanel.tsx`):
-  - Multi-tab modal dialog (Overview, Learning Objectives, Sub-levels, Live Question Bank) with strand filtering and responsive card inspection.
+  - `GET /api/content/levels`: Returns all 93 levels with strand, class, stage, and question counts.
+  - `GET /api/content/levels/:levelId`: Reads and parses the markdown files from `FLN Levels Structure/` to return descriptions, objectives, and sub-levels.
+  - `GET /api/content/levels/:levelId/questions`: Returns matching questions from `data/questionBank.json`.
+- **Frontend Modal & Explorer** (`frontend/src/components/LevelDetailModal.tsx`, `frontend/src/components/panels/ContentPanel.tsx`):
+  - Built an interactive modal with tabs for Overview, Learning Objectives, Sub-levels, and Question Bank preview.
+  - Updated `ContentPanel.tsx` with strand filters, search, and click-to-open level inspection.
 
-### 3. Audit Logbook Microsoft Excel (`.xlsx`) Reporting Engine
-- **Excel Export**: Integrated SheetJS (`xlsx`) in `frontend/src/components/LogbookView.tsx` to generate styled `.xlsx` spreadsheets with proper column widths, timestamps, and activity categories.
-- **Robust Role Scoping**: Updated `backend/src/routes/logbook.ts` with case-insensitive role checks and seed log fallbacks for demo environments.
+### 3. Excel (.xlsx) Export for Audit Logbook
+- **Excel Export**: Integrated SheetJS (`xlsx`) in `frontend/src/components/LogbookView.tsx` to generate clean `.xlsx` spreadsheets with proper column widths and formatted dates.
+- **Role Scoping**: Updated `backend/src/routes/logbook.ts` to use case-insensitive role checks and provided sample seed logs for testing.
 
-### 4. Resilient Authentication & React 19 Error Boundary
-- **JWT & RBAC Hardening**: Updated `backend/src/auth.ts` and `backend/src/routes/auth.ts` to enrich JWT tokens with complete user profile and geo-scope claims.
-- **Error Boundary**: Implemented `frontend/src/components/ErrorBoundary.tsx` compatible with React 19 component lifecycles, wrapping dynamic role workspaces in `frontend/src/App.tsx`.
+### 4. Authentication Improvements & Error Boundary
+- **JWT & Role Scoping**: Updated `backend/src/auth.ts` and `backend/src/routes/auth.ts` to include full user location metadata in JWT payloads and avoid unnecessary database lookups.
+- **Error Boundary**: Created `frontend/src/components/ErrorBoundary.tsx` to catch sub-panel errors gracefully and prevent blank white screens in `frontend/src/App.tsx`.
 
 ### 5. Monorepo Quality Assurance & Build Verification
-- Validated full TypeScript type safety across both `@fln/frontend` and `@fln/backend` with zero compilation or lint errors (`npm run lint`).
-- Executed and validated production bundle generation (`vite build` for client SPA and `esbuild` for Node.js backend) with zero warnings or broken references.
+- Validated full TypeScript type safety across `@fln/frontend` and `@fln/backend` with zero compilation or lint errors (`npm run lint`).
+- Verified production builds (`npm run build`) for both the frontend Vite bundle and the backend esbuild bundle.
