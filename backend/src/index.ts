@@ -35,6 +35,7 @@ import { registerQuestionLogicRoutes } from './routes/questionLogics';
 import { registerQuestionTemplateRoutes } from './routes/questionTemplates';
 import { registerQuestionOptionRoutes } from './routes/questionOptions';
 import { registerDiagnosticBulkRoutes } from './routes/diagnosticBulk';
+import { registerCertificationRoutes } from './routes/certification';
 import { registerContentRoutes } from './routes/content';
 import { registerAttendanceRoutes } from './routes/attendance';
 import { registerMisconceptionRoutes } from './routes/misconceptions';
@@ -238,6 +239,7 @@ async function startServer() {
   registerQuestionTemplateRoutes(app);
   registerQuestionOptionRoutes(app);
   registerDiagnosticBulkRoutes(app);
+  registerCertificationRoutes(app);
 
   // Read-only analysis over already-graded submissions: clusters a cohort on
   // HOW its children fail rather than how much they score.
