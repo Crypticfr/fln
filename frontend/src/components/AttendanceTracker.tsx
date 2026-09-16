@@ -69,14 +69,17 @@ export const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
             setFetchedStudents(d);
           }
         })
-        .catch(err => console.error('Error fetching students for school:', err))
+        .catch(err => {
+          console.error('Error fetching students for school:', err);
+          setFetchedStudents([]);
+        })
         .finally(() => setLoadingStudents(false));
-    } else if (students && students.length > 0) {
-      setFetchedStudents(students);
+    } else {
+      setFetchedStudents(students || []);
     }
-  }, [selectedSchool, token, students.length]);
+  }, [selectedSchool, token, students]);
 
-  const activeStudentsList = fetchedStudents.length > 0 ? fetchedStudents : (students || []);
+  const activeStudentsList = selectedSchool ? fetchedStudents : (students || []);
 
   // Load attendance for the specified date from backend or dateCache
   const loadAttendance = async (date: string) => {
@@ -201,7 +204,7 @@ export const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
             studentName: student?.name || 'Student',
             classGroup: student?.classGroup || 'Class 2',
             section: student?.section || 'A',
-            schoolId: student?.schoolId || 'gps-mt-001',
+            schoolId: student?.schoolId || selectedSchool || currentUser.schoolId || '',
             status,
             remarks: updatedRemarks
           }]
@@ -247,7 +250,7 @@ export const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
         studentName: s.name,
         classGroup: s.classGroup,
         section: s.section || 'A',
-        schoolId: s.schoolId || 'gps-mt-001',
+        schoolId: s.schoolId || selectedSchool || currentUser.schoolId || '',
         status,
         remarks: currentRemarks
       };
@@ -290,7 +293,7 @@ export const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
           studentName: s.name,
           classGroup: s.classGroup,
           section: s.section || 'A',
-          schoolId: s.schoolId || 'gps-mt-001',
+          schoolId: s.schoolId || selectedSchool || currentUser.schoolId || '',
           status: state.status,
           remarks: state.remarks
         };
@@ -644,7 +647,12 @@ export const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({
           </div>
         </div>
 
-        {filteredStudents.length === 0 ? (
+        {loadingStudents ? (
+          <div className="p-12 text-center text-xs text-slate-400 dark:text-slate-500 font-mono flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></span>
+            Loading student roster...
+          </div>
+        ) : filteredStudents.length === 0 ? (
           <div className="p-12 text-center text-xs text-slate-400 dark:text-slate-500 font-mono">
             No students found matching your filters.
           </div>
