@@ -22,6 +22,7 @@ import { BlocksPanel } from './panels/BlocksPanel';
 import { AnalyticsPanel } from './panels/AnalyticsPanel';
 import { StudentProfilePanel } from './panels/StudentProfilePanel';
 import { AttendanceTracker } from './AttendanceTracker';
+import { QuestionBankPanel } from './panels/QuestionBankPanel';
 import { PageHeader } from './panels/PanelShared';
 import { CertificationReviewPanel } from './CertificationReviewPanel';
 import { Award } from 'lucide-react';
@@ -117,12 +118,8 @@ export const PanelViews: React.FC<PanelViewsProps> = ({ activePanel, currentUser
     return <TeachersPanel schools={schools} teachersList={teachersList} currentUser={currentUser} />;
   }
 
-  // Fix #446: Principal Students navigation (view='students') had no matching
-  // panel handler, so PanelViews returned null and rendered nothing.
-  // Reuse StudentListPanel — the same component used by teachers for
-  // 'student_list'. StudentListPanel already gates the Register/CSV-import
-  // actions behind isTeacherOrVolunteer, so the principal gets a read-only
-  // roster view without any code duplication.
+  // Fix #445/#446: Principal Students navigation (view='students') uses StudentListPanel,
+  // providing full student registration, CSV bulk import, and roster management.
   if (panel === 'students' && currentUser.role === UserRole.SCHOOL) {
     return (
       <StudentListPanel
@@ -152,6 +149,7 @@ export const PanelViews: React.FC<PanelViewsProps> = ({ activePanel, currentUser
   if (panel === 'analytics') return <AnalyticsPanel currentUser={currentUser} schools={schools} students={students} getDistrictStats={getDistrictStats} getBlockStats={getBlockStats} />;
 
   if (panel === 'system_settings') return <SystemSettingsPanel />;
+  if (panel === 'question_bank') return <QuestionBankPanel currentUser={currentUser} token={token} />;
 
   // Admin-only Step-Up Aadhaar Reveal (see backend/src/routes/aadhaarDetokenize.ts).
   // The panel itself enforces role gating as a defence-in-depth; the menu

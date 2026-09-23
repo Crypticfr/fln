@@ -5,9 +5,11 @@ import {
   Menu, X, Search, Bell, Sun, Moon, LogOut, ChevronRight, ChevronLeft, ChevronDown,
   LayoutDashboard, BookOpen, BookMarked, UserCheck, Calendar, ShieldCheck, HelpCircle, Settings, Users,
   School, GraduationCap, MapPin, BarChart3, FileText, ClipboardList, ShieldAlert, KeyRound, Clock, Database, Home, Award,
-  Fingerprint
+  Fingerprint, Ticket as TicketIcon, ScrollText
 } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { TicketModal } from './tickets/TicketModal';
+import { LogbookModal } from './LogbookModal';
 
 interface NavigationItem {
   name: string;
@@ -19,6 +21,7 @@ interface NavigationItem {
 
 interface LayoutProps {
   currentUser: User;
+  token: string;
   onRoleSwitch: (role: UserRole) => void;
   activeView: string;
   onSelectView: (view: string) => void;
@@ -34,6 +37,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({
   currentUser,
+  token,
   onRoleSwitch,
   activeView,
   onSelectView,
@@ -57,6 +61,8 @@ export const Layout: React.FC<LayoutProps> = ({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [showLogbookModal, setShowLogbookModal] = useState(false);
 
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
@@ -102,6 +108,14 @@ export const Layout: React.FC<LayoutProps> = ({
   }, []);
 
   const collapsed = false;
+
+  // Mirrors GET /api/logbook authorization: only admin-tier roles may read the
+  // audit trail (teacher/volunteer/school receive 403), so hide the action for them.
+  const canViewLogbook =
+    currentUser.role === UserRole.SUPERADMIN ||
+    currentUser.role === UserRole.ADMIN ||
+    currentUser.role === UserRole.DISTRICT_ADMIN ||
+    currentUser.role === UserRole.BLOCK_ADMIN;
 
   const toggleSidebar = () => {
     setSidebarCollapsed((prev: boolean) => {
@@ -151,6 +165,12 @@ export const Layout: React.FC<LayoutProps> = ({
         list.push({ name: 'Content Library', view: 'content', icon: BookMarked });
         list.push({ name: 'Worksheets', view: 'worksheets', icon: ClipboardList });
         list.push({ name: 'Misconceptions', view: 'misconceptions', icon: Fingerprint });
+        // Pedagogical & Process Feedback — moved out of the TeacherDashboard
+        // body into the LHS sidebar so the ticket form doesn't crowd the
+        // student list / diagnostic cards. The `activePanel === 'tickets'`
+        // route in App.tsx renders the same <TicketSubmission> component
+        // that used to live inline here.
+        list.push({ name: 'Feedback', view: 'tickets', icon: HelpCircle });
         break;
 
       case UserRole.VOLUNTEER:
@@ -195,6 +215,7 @@ export const Layout: React.FC<LayoutProps> = ({
         list.push({ name: 'Content Library', view: 'content', icon: BookMarked });
         list.push({ name: 'Performance', view: 'performance', icon: BarChart3 });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
+        list.push({ name: 'Question Bank', view: 'question_bank', icon: Database });
         list.push({ name: 'Aadhaar Reveal', view: 'aadhaar_reveal', icon: ShieldCheck });
         list.push({ name: 'Security', view: 'security', icon: KeyRound });
         break;
@@ -205,6 +226,7 @@ export const Layout: React.FC<LayoutProps> = ({
         list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Content Library', view: 'content', icon: BookMarked });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
+        list.push({ name: 'Question Bank', view: 'question_bank', icon: Database });
         list.push({ name: 'Aadhaar Reveal', view: 'aadhaar_reveal', icon: ShieldCheck });
         list.push({ name: 'Security', view: 'security', icon: KeyRound });
         break;
@@ -214,6 +236,7 @@ export const Layout: React.FC<LayoutProps> = ({
         list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
         list.push({ name: 'Content Library', view: 'content', icon: BookMarked });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
+        list.push({ name: 'Question Bank', view: 'question_bank', icon: Database });
         list.push({ name: 'Aadhaar Reveal', view: 'aadhaar_reveal', icon: ShieldCheck });
         list.push({ name: 'Security', view: 'security', icon: KeyRound });
         list.push({ name: 'Certification Reviews', view: 'certification_reviews', icon: Award });
@@ -223,8 +246,9 @@ export const Layout: React.FC<LayoutProps> = ({
         list.push({ name: 'Users', view: 'users', icon: Users });
         list.push({ name: 'Schools', view: 'schools', icon: School });
         list.push({ name: 'Worksheet Templates', view: 'worksheet_templates', icon: ClipboardList });
-        list.push({ name: 'Content Library', view: 'content', icon: BookMarked });
         list.push({ name: 'Attendance', view: 'attendance', icon: Calendar });
+        list.push({ name: 'Content Library', view: 'content', icon: BookMarked });
+        list.push({ name: 'Question Bank', view: 'question_bank', icon: Database });
         list.push({ name: 'Analytics', view: 'analytics', icon: BarChart3 });
         list.push({ name: 'System Settings', view: 'system_settings', icon: Settings });
         list.push({ name: 'Aadhaar Reveal', view: 'aadhaar_reveal', icon: ShieldCheck });
@@ -418,6 +442,28 @@ export const Layout: React.FC<LayoutProps> = ({
               </div>
             )}
           </div>
+
+          {/* Support Tickets — opens the existing ticket list/create flow */}
+          <button
+            onClick={() => setShowTicketModal(true)}
+            className="rounded-lg p-2 text-slate-505 hover:bg-slate-100 hover:text-indigo-600 transition dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
+            title="Support Tickets"
+            aria-label="Open support tickets"
+          >
+            <TicketIcon className="h-4.5 w-4.5" />
+          </button>
+
+          {/* Activity Logbook — admin-tier only, matching /api/logbook authorization */}
+          {canViewLogbook && (
+            <button
+              onClick={() => setShowLogbookModal(true)}
+              className="rounded-lg p-2 text-slate-505 hover:bg-slate-100 hover:text-indigo-600 transition dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
+              title="Activity Logbook"
+              aria-label="Open activity logbook"
+            >
+              <ScrollText className="h-4.5 w-4.5" />
+            </button>
+          )}
 
           {/* User Profile Info */}
           <div className="flex items-center gap-2 border-l border-slate-200 pl-4 dark:border-slate-700">
@@ -770,6 +816,22 @@ export const Layout: React.FC<LayoutProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Support Ticket & Activity Logbook Modals */}
+      <TicketModal
+        isOpen={showTicketModal}
+        onClose={() => setShowTicketModal(false)}
+        token={token}
+        userRole={currentUser.role}
+      />
+      {canViewLogbook && (
+        <LogbookModal
+          isOpen={showLogbookModal}
+          onClose={() => setShowLogbookModal(false)}
+          token={token}
+          user={currentUser}
+        />
       )}
     </div>
   );
