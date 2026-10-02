@@ -31,9 +31,6 @@ export const StudentListPanel: React.FC<StudentListPanelProps> = ({
     currentUser.role === UserRole.VOLUNTEER ||
     currentUser.role === UserRole.SCHOOL;
   const isTeacherOrVolunteer =
-    currentUser.role === UserRole.TEACHER || currentUser.role === UserRole.VOLUNTEER;
-
-  const isTeacherOrVolunteer =
     currentUser.role === UserRole.TEACHER ||
     currentUser.role === UserRole.VOLUNTEER;
 

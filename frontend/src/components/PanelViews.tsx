@@ -26,7 +26,7 @@ import { AttendanceTracker } from './AttendanceTracker';
 import { QuestionBankPanel } from './panels/QuestionBankPanel';
 import { PageHeader } from './panels/PanelShared';
 import { CertificationReviewPanel } from './CertificationReviewPanel';
-import { Award } from 'lucide-react';
+
 
 interface PanelViewsProps {
   activePanel: string;
